@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>European CCS Projects — Factor2 Energy</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#f5f7f6; --surface:#ffffff; --surface2:#f0f2f1; --surface3:#e8ecea;
+  --border:#d4dbd7; --border-light:#c0cbc4;
+  --text:#1a2b22; --text-dim:#5a7264; --text-muted:#8a9f92;
+  --accent:#16a34a; --accent-dim:#dcfce7; --accent-hover:#15803d;
+  --blue:#2563eb; --purple:#7c3aed; --amber:#d97706; --rose:#e11d48; --teal:#0d9488;
+}
+
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── Header ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:1000;flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#16a34a,#166534);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:11px}
+.logo h1{font-size:15px;font-weight:600;letter-spacing:-0.3px}
+.logo .sub{color:var(--text-dim);font-weight:400;font-size:12px;margin-left:6px}
+.stats{display:flex;gap:20px;font-size:12px;color:var(--text-dim)}
+.stats strong{color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:13px}
+
+/* ── Main layout ── */
+.main{display:flex;flex:1;overflow:hidden}
+#map{flex:1;background:var(--bg)}
+
+/* ── Sidebar ── */
+.sidebar{width:400px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sidebar-section{padding:12px 16px;border-bottom:1px solid var(--border)}
+.sidebar-section h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px}
+
+/* Search */
+.search input{width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border .2s}
+.search input:focus{border-color:var(--accent)}
+.search input::placeholder{color:var(--text-muted)}
+
+/* Filter pills */
+.filters{display:flex;flex-wrap:wrap;gap:5px}
+.pill{padding:4px 10px;border-radius:16px;font-size:10px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.pill:hover{border-color:var(--accent);color:var(--text)}
+.pill.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.pill .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle}
+
+/* Filter groups */
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.filter-label{font-size:10px;color:var(--text-muted);min-width:55px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+
+/* Project list */
+.project-list{flex:1;overflow-y:auto;padding:6px 10px}
+.project-list::-webkit-scrollbar{width:5px}
+.project-list::-webkit-scrollbar-track{background:transparent}
+.project-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.card{padding:12px 14px;margin-bottom:4px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .15s}
+.card:hover{background:var(--surface2);border-color:var(--border)}
+.card.active{background:var(--surface2);border-color:var(--accent)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.card h3{font-size:13px;font-weight:600;line-height:1.3;flex:1}
+.badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;white-space:nowrap;margin-left:6px;flex-shrink:0}
+.card-meta{font-size:11px;color:var(--text-dim);line-height:1.5;display:flex;flex-wrap:wrap;gap:4px 12px}
+.card-meta .mono{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)}
+
+/* Status badge colors */
+.s-op{background:#dcfce7;color:#166534}
+.s-uc{background:#fef9c3;color:#854d0e}
+.s-id{background:#dbeafe;color:#1e40af}
+.s-pl{background:#ede9fe;color:#5b21b6}
+
+/* Popup */
+.leaflet-popup-content-wrapper{background:var(--surface)!important;color:var(--text)!important;border-radius:12px!important;border:1px solid var(--border)!important;box-shadow:0 8px 30px rgba(0,0,0,.12)!important;max-width:360px}
+.leaflet-popup-tip{background:var(--surface)!important}
+.leaflet-popup-content{margin:14px 16px!important}
+.pop h3{font-size:15px;font-weight:600;margin-bottom:2px;color:var(--accent)}
+.pop .loc{font-size:12px;color:var(--text-dim);margin-bottom:10px}
+.pop table{width:100%;font-size:11px;border-collapse:collapse}
+.pop td{padding:3px 0;vertical-align:top}
+.pop td:first-child{color:var(--text-muted);width:100px;white-space:nowrap}
+.pop td:last-child{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px}
+.pop .links{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.pop .links a{font-size:10px;color:var(--accent);text-decoration:none;padding:3px 9px;border:1px solid var(--accent-dim);border-radius:5px;transition:all .15s}
+.pop .links a:hover{background:var(--accent-dim)}
+
+/* Bottom bar */
+.bottom-bar{padding:10px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between;flex-shrink:0}
+.bottom-bar a{color:var(--accent);text-decoration:none}
+
+/* Zoom controls */
+.leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important}
+.leaflet-control-zoom a:hover{background:var(--surface2)!important}
+
+.no-results{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:12px}
+
+@media(max-width:960px){
+  .main{flex-direction:column-reverse}
+  .sidebar{width:100%;height:45vh;border-left:none;border-top:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">F2E</div>
+    <h1>European CCS Projects<span class="sub">Factor2 Energy</span></h1>
+  </div>
+  <div class="stats">
+    <div><strong id="sTotal">—</strong> projects</div>
+    <div><strong id="sCap">—</strong> Mtpa</div>
+    <div><strong id="sCountry">—</strong> countries</div>
+  </div>
+</header>
+
+<div class="main">
+  <div id="map"></div>
+  <div class="sidebar">
+
+    <div class="sidebar-section search">
+      <input type="text" id="searchInput" placeholder="Search project, operator, country…" />
+    </div>
+
+    <div class="sidebar-section" id="filterSection">
+      <h2>Filters</h2>
+
+      <div class="filter-row">
+        <span class="filter-label">Status</span>
+        <div class="filters" id="fStatus">
+          <button class="pill active" data-v="all">All</button>
+          <button class="pill" data-v="Operational"><span class="dot" style="background:#16a34a"></span>Operational</button>
+          <button class="pill" data-v="Under Construction"><span class="dot" style="background:#d97706"></span>Construction</button>
+          <button class="pill" data-v="In Development"><span class="dot" style="background:#2563eb"></span>Development</button>
+          <button class="pill" data-v="Planned"><span class="dot" style="background:#7c3aed"></span>Planned</button>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <span class="filter-label">Sector</span>
+        <div class="filters" id="fSector">
+          <button class="pill active" data-v="all">All</button>
+          <button class="pill" data-v="Industrial">Industrial</button>
+          <button class="pill" data-v="Heat and Power">Heat & Power</button>
+          <button class="pill" data-v="Storage">Storage</button>
+          <button class="pill" data-v="Waste-to-Energy">WtE</button>
+          <button class="pill" data-v="Direct Air Capture">DAC</button>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <span class="filter-label">Subsect.</span>
+        <div class="filters" id="fSubsector">
+          <button class="pill active" data-v="all">All</button>
+          <button class="pill" data-v="Cement"><span class="dot" style="background:#3b82f6"></span>Cement</button>
+          <button class="pill" data-v="Hydrogen"><span class="dot" style="background:#eab308"></span>Hydrogen</button>
+          <button class="pill" data-v="Storage"><span class="dot" style="background:#ef4444"></span>Storage</button>
+          <button class="pill" data-v="Biofuels"><span class="dot" style="background:#06b6d4"></span>Biofuels</button>
+          <button class="pill" data-v="Transport Hub"><span class="dot" style="background:#f97316"></span>Transport</button>
+          <button class="pill" data-v="Direct Air Capture"><span class="dot" style="background:#22c55e"></span>DAC</button>
+          <button class="pill" data-v="Waste-to-Energy"><span class="dot" style="background:#8b5cf6"></span>WtE</button>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <span class="filter-label">Contact</span>
+        <div class="filters" id="fContact">
+          <button class="pill active" data-v="all">All</button>
+          <button class="pill" data-v="Established Relationship">Established</button>
+          <button class="pill" data-v="In Dialogue">In Dialogue</button>
+          <button class="pill" data-v="Reached Out">Reached Out</button>
+          <button class="pill" data-v="No Contact">No Contact</button>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <span class="filter-label">Priority</span>
+        <div class="filters" id="fPriority">
+          <button class="pill active" data-v="all">All</button>
+          <button class="pill" data-v="High">High</button>
+          <button class="pill" data-v="Medium">Medium</button>
+          <button class="pill" data-v="Low">Low</button>
+          <button class="pill" data-v="Watch List">Watch</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="project-list" id="projectList"></div>
+
+    <div class="bottom-bar">
+      <span>Data: <a href="https://www.catf.us/ccstableeurope/" target="_blank">CATF</a> + F2E enrichment</span>
+      <span id="lastUpdate"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Map ──
+const map = L.map('map',{center:[54,8],zoom:4,zoomControl:true,attributionControl:false});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
+L.control.attribution({position:'bottomleft',prefix:false}).addAttribution('© CARTO · © OSM').addTo(map);
+
+// ── Subsector colors (matching CATF) ──
+const subColors={
+  'Cement':'#3b82f6','Hydrogen':'#eab308','Storage':'#ef4444','Biofuels':'#06b6d4',
+  'Transport Hub':'#f97316','Direct Air Capture':'#22c55e','Waste-to-Energy':'#8b5cf6',
+  'Biomass':'#10b981','Natural Gas':'#6366f1','Aluminium':'#ec4899','Chemical ':'#f43f5e',
+  'Other Subsector':'#6b7280'
+};
+const statusColors={Operational:'#16a34a','Under Construction':'#d97706','In Development':'#2563eb',Planned:'#7c3aed'};
+
+function getSubColor(sub){return subColors[sub]||'#6b7280'}
+function getStatusBorder(st){return statusColors[st]||'#6b7280'}
+
+function makeIcon(p){
+  const cap = typeof p['Capacity (Metric Tons Per Annum)'] === 'number' ? p['Capacity (Metric Tons Per Annum)'] : 0;
+  let r;
+  if(cap<=0) r=5;
+  else if(cap<200000) r=7;
+  else if(cap<1000000) r=10;
+  else if(cap<5000000) r=14;
+  else r=18;
+
+  const fill=getSubColor(p['Subsector Classification']);
+  const stroke=getStatusBorder(p['Status']);
+  const strokeW = p['Status']==='Operational'?3:1.5;
+
+  return L.divIcon({
+    className:'',
+    html:`<div style="width:${r*2}px;height:${r*2}px;border-radius:50%;background:${fill};opacity:.85;border:${strokeW}px solid ${stroke};box-shadow:0 1px ${r+2}px ${fill}44;transition:transform .15s"></div>`,
+    iconSize:[r*2,r*2],iconAnchor:[r,r]
+  });
+}
+
+// ── State ──
+let allProjects=[];
+let markers={};
+let filters={status:'all',sector:'all',subsector:'all',contact:'all',priority:'all'};
+let searchQ='';
+
+// ── Data (loaded from CSV) ──
+function init(){
+  Papa.parse('projects.csv', {
+    download: true,
+    header: true,
+    delimiter: ';',
+    skipEmptyLines: true,
+    complete: function(results) {
+      allProjects = results.data.map(p => {
+        // Handle European decimal commas in coordinates
+        let lat = (p['Approx. Latitude']||'').toString().replace(',','.');
+        let lng = (p['Approx. Longitude']||'').toString().replace(',','.');
+        p['Approx. Latitude'] = parseFloat(lat) || 0;
+        p['Approx. Longitude'] = parseFloat(lng) || 0;
+        // Handle capacity
+        let cap = (p['Visualized Capacity (Metric Tons Per Annum)']||'0').toString().replace(',','.');
+        p['Visualized Capacity (Metric Tons Per Annum)'] = parseFloat(cap) || 0;
+        if(typeof p['Capacity (Metric Tons Per Annum)']==='string'){
+          if(p['Capacity (Metric Tons Per Annum)']==='Unknown') p['Capacity (Metric Tons Per Annum)']=0;
+          else p['Capacity (Metric Tons Per Annum)']=parseFloat(p['Capacity (Metric Tons Per Annum)'].replace(',','.'))||0;
+        }
+        // Normalize sector
+        if(p['Sector Classification']==='Heat & Power') p['Sector Classification']='Heat and Power';
+        return p;
+      }).filter(p => p['Approx. Latitude'] && p['Approx. Longitude']);
+      render();
+    },
+    error: function(err) {
+      console.error('CSV load error:', err);
+      document.getElementById('sidebar').innerHTML = '<div style="padding:20px;color:#ef4444;">Error loading projects.csv. Make sure the file is in the same directory as index.html.</div>';
+    }
+  });
+}
+
+function getFiltered(){
+  return allProjects.filter(p=>{
+    if(filters.status!=='all' && p['Status']!==filters.status) return false;
+    if(filters.sector!=='all' && p['Sector Classification']!==filters.sector) return false;
+    if(filters.subsector!=='all' && p['Subsector Classification']!==filters.subsector) return false;
+    if(filters.contact!=='all' && (p['contact_status']||'')!==filters.contact) return false;
+    if(filters.priority!=='all' && (p['internal_priority']||'')!==filters.priority) return false;
+    if(searchQ){
+      const q=searchQ.toLowerCase();
+      return ['Project Name','Entities','Country','Location','Subsector Description','project_id']
+        .some(k=>(p[k]||'').toString().toLowerCase().includes(q));
+    }
+    return true;
+  });
+}
+
+function fmtCap(v){
+  if(!v||v<=0) return 'Unknown';
+  if(v>=1e6) return (v/1e6).toFixed(1)+' Mtpa';
+  if(v>=1e3) return Math.round(v/1e3)+'K tpa';
+  return v+' tpa';
+}
+
+function statusBadge(s){
+  const cls={'Operational':'s-op','Under Construction':'s-uc','In Development':'s-id','Planned':'s-pl'}[s]||'s-id';
+  return `<span class="badge ${cls}">${s}</span>`;
+}
+
+function render(){
+  Object.values(markers).forEach(m=>map.removeLayer(m));
+  markers={};
+  const vis=getFiltered();
+
+  // Stats
+  document.getElementById('sTotal').textContent=vis.length;
+  const totalCap=vis.reduce((s,p)=>s+(p['Capacity (Metric Tons Per Annum)']||0),0);
+  document.getElementById('sCap').textContent=(totalCap/1e6).toFixed(1);
+  document.getElementById('sCountry').textContent=new Set(vis.map(p=>p.Country)).size;
+
+  // Markers
+  vis.forEach(p=>{
+    const m=L.marker([p['Approx. Latitude'],p['Approx. Longitude']],{icon:makeIcon(p)}).addTo(map);
+
+    const refs=(p.Reference||'').toString();
+    const refLinks=refs.split(/[\s,;]+/).filter(u=>u.startsWith('http')).map(u=>`<a href="${u}" target="_blank">Source ↗</a>`).join('');
+    const webLink=p.project_website?`<a href="${p.project_website}" target="_blank">Website ↗</a>`:'';
+    const spLink=p.sharepoint_folder?`<a href="${p.sharepoint_folder}" target="_blank">Documents ↗</a>`:'';
+
+    m.bindPopup(`
+      <div class="pop">
+        <h3>${p['Project Name']}</h3>
+        <div class="loc">${p.Location||''}, ${p.Country} · ${p.project_id}</div>
+        <table>
+          <tr><td>Entities</td><td>${p.Entities||'—'}</td></tr>
+          <tr><td>Sector</td><td>${p['Subsector Description']||p['Sector Description']||'—'}</td></tr>
+          <tr><td>Capacity</td><td>${fmtCap(p['Capacity (Metric Tons Per Annum)'])}</td></tr>
+          <tr><td>Status</td><td>${p.Status}</td></tr>
+          <tr><td>Announced</td><td>${p['Year Announced']||'—'}</td></tr>
+          <tr><td>Operational</td><td>${p['Year Operational']||'—'}</td></tr>
+          <tr><td>Details</td><td style="font-family:'DM Sans';font-size:11px">${p['Capture or Storage Details']||'—'}</td></tr>
+          ${p.capture_lead_company?`<tr><td>Capture Lead</td><td>${p.capture_lead_company}</td></tr>`:''}
+          ${p.storage_lead_company?`<tr><td>Storage Lead</td><td>${p.storage_lead_company}</td></tr>`:''}
+          ${p.funding_source?`<tr><td>Funding</td><td>${p.funding_source} ${p.funding_amount_eur_m?'€'+p.funding_amount_eur_m+'M':''}</td></tr>`:''}
+          ${p.contact_status?`<tr><td>Contact</td><td>${p.contact_status}</td></tr>`:''}
+        </table>
+        <div class="links">${webLink}${spLink}${refLinks}</div>
+      </div>
+    `,{maxWidth:380});
+
+    m.on('click',()=>highlightCard(p.project_id));
+    markers[p.project_id]=m;
+  });
+
+  // List
+  const list=document.getElementById('projectList');
+  if(!vis.length){list.innerHTML='<div class="no-results">No projects match filters</div>';return}
+  list.innerHTML=vis.map(p=>`
+    <div class="card" data-id="${p.project_id}" onclick="focus('${p.project_id}')">
+      <div class="card-top">
+        <h3>${p['Project Name']}</h3>
+        ${statusBadge(p.Status)}
+      </div>
+      <div class="card-meta">
+        <span>${p.Country}</span>
+        <span style="color:${getSubColor(p['Subsector Classification'])}">${p['Subsector Classification']||p['Sector Classification']}</span>
+        <span class="mono">${fmtCap(p['Capacity (Metric Tons Per Annum)'])}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function focus(id){
+  const p=allProjects.find(x=>x.project_id===id);
+  if(!p) return;
+  map.flyTo([p['Approx. Latitude'],p['Approx. Longitude']],8,{duration:.7});
+  if(markers[id]) markers[id].openPopup();
+  highlightCard(id);
+}
+
+function highlightCard(id){
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+  const el=document.querySelector(`.card[data-id="${id}"]`);
+  if(el){el.classList.add('active');el.scrollIntoView({behavior:'smooth',block:'nearest'})}
+}
+
+// ── Filter handlers ──
+['fStatus','fSector','fSubsector','fContact','fPriority'].forEach(gid=>{
+  const keyMap={fStatus:'status',fSector:'sector',fSubsector:'subsector',fContact:'contact',fPriority:'priority'};
+  document.getElementById(gid).addEventListener('click',e=>{
+    if(!e.target.classList.contains('pill')&&!e.target.closest('.pill')) return;
+    const btn=e.target.classList.contains('pill')?e.target:e.target.closest('.pill');
+    document.querySelectorAll(`#${gid} .pill`).forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    filters[keyMap[gid]]=btn.dataset.v;
+    render();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input',e=>{searchQ=e.target.value;render()});
+
+init();
+</script>
+</body>
+</html>
