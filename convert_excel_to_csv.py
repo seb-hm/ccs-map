@@ -1,5 +1,6 @@
 import pandas as pd
-import numpy as np
+import glob
+import sys
 
 def to_str(val):
     if pd.isna(val):
@@ -8,7 +9,15 @@ def to_str(val):
         return str(int(val))
     return str(val)
 
-df = pd.read_excel('CCS Projects Europe.xlsx', sheet_name='CCS Projects Europe')
+xlsx_files = glob.glob('*.xlsx')
+if not xlsx_files:
+    print("No .xlsx file found — skipping CSV generation.")
+    sys.exit(0)
+
+xlsx_file = xlsx_files[0]
+print(f"Reading {xlsx_file}...")
+
+df = pd.read_excel(xlsx_file)
 for col in df.columns:
     df[col] = df[col].apply(to_str)
 
