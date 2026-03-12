@@ -249,7 +249,7 @@ function makeIcon(p){
 // ── State ──
 let allProjects=[];
 let markers={};
-let filters={status:'all',sector:'all',subsector:'all',contact:'all',priority:'all',storageType:'all'};
+let filters={status:new Set(),sector:new Set(),subsector:new Set(),contact:new Set(),priority:new Set(),storageType:new Set()};
 let searchQ='';
 
 // ── Data (loaded from CSV) ──
@@ -310,12 +310,12 @@ function init(){
 
 function getFiltered(){
   return allProjects.filter(p=>{
-    if(filters.status!=='all' && p['Status']!==filters.status) return false;
-    if(filters.sector!=='all' && p['Sector Classification']!==filters.sector) return false;
-    if(filters.subsector!=='all' && p['Subsector Classification']!==filters.subsector) return false;
-    if(filters.contact!=='all' && (p['contact_status']||'')!==filters.contact) return false;
-    if(filters.priority!=='all' && (p['internal_priority']||'')!==filters.priority) return false;
-    if(filters.storageType!=='all' && (p['Storage Classification']||'').trim()!==filters.storageType) return false;
+    if(filters.status.size>0 && !filters.status.has(p['Status'])) return false;
+    if(filters.sector.size>0 && !filters.sector.has(p['Sector Classification'])) return false;
+    if(filters.subsector.size>0 && !filters.subsector.has(p['Subsector Classification'])) return false;
+    if(filters.contact.size>0 && !filters.contact.has(p['contact_status']||'')) return false;
+    if(filters.priority.size>0 && !filters.priority.has(p['internal_priority']||'')) return false;
+    if(filters.storageType.size>0 && !filters.storageType.has((p['Storage Classification']||'').trim())) return false;
     if(searchQ){
       const q=searchQ.toLowerCase();
       return ['Project Name','Entities','Country','Location','Subsector Description','project_id']
@@ -420,9 +420,24 @@ function highlightCard(id){
   document.getElementById(gid).addEventListener('click',e=>{
     if(!e.target.classList.contains('pill')&&!e.target.closest('.pill')) return;
     const btn=e.target.classList.contains('pill')?e.target:e.target.closest('.pill');
-    document.querySelectorAll(`#${gid} .pill`).forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    filters[keyMap[gid]]=btn.dataset.v;
+    const key=keyMap[gid];
+    const val=btn.dataset.v;
+    const allBtn=document.querySelector(`#${gid} .pill[data-v="all"]`);
+    if(val==='all'){
+      filters[key].clear();
+      document.querySelectorAll(`#${gid} .pill`).forEach(p=>p.classList.remove('active'));
+      allBtn.classList.add('active');
+    } else {
+      if(filters[key].has(val)){
+        filters[key].delete(val);
+        btn.classList.remove('active');
+        if(filters[key].size===0) allBtn.classList.add('active');
+      } else {
+        filters[key].add(val);
+        btn.classList.add('active');
+        allBtn.classList.remove('active');
+      }
+    }
     render();
   });
 });
