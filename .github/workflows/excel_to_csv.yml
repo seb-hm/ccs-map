@@ -1,0 +1,32 @@
+name: Excel to CSV
+
+on:
+  push:
+    paths:
+      - '*.xlsx'
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install pandas openpyxl
+
+      - name: Convert Excel to CSV
+        run: python convert_excel_to_csv.py
+
+      - name: Commit and push CSV
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add projects.csv
+          git diff --staged --quiet || git commit -m "Auto-generate projects.csv from Excel [skip ci]"
+          git push

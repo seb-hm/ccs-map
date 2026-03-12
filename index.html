@@ -76,6 +76,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .s-uc{background:#fef9c3;color:#854d0e}
 .s-id{background:#dbeafe;color:#1e40af}
 .s-pl{background:#ede9fe;color:#5b21b6}
+.s-rs{background:#f3f4f6;color:#374151}
 
 /* Popup */
 .leaflet-popup-content-wrapper{background:var(--surface)!important;color:var(--text)!important;border-radius:12px!important;border:1px solid var(--border)!important;box-shadow:0 8px 30px rgba(0,0,0,.12)!important;max-width:360px}
@@ -140,6 +141,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
           <button class="pill" data-v="Under Construction"><span class="dot" style="background:#d97706"></span>Construction</button>
           <button class="pill" data-v="In Development"><span class="dot" style="background:#2563eb"></span>Development</button>
           <button class="pill" data-v="Planned"><span class="dot" style="background:#7c3aed"></span>Planned</button>
+          <button class="pill" data-v="Research"><span class="dot" style="background:#9ca3af"></span>Research</button>
         </div>
       </div>
 
@@ -220,7 +222,7 @@ const subColors={
   'Biomass':'#10b981','Natural Gas':'#6366f1','Aluminium':'#ec4899','Chemical ':'#f43f5e',
   'Other Subsector':'#6b7280'
 };
-const statusColors={Operational:'#16a34a','Under Construction':'#d97706','In Development':'#2563eb',Planned:'#7c3aed'};
+const statusColors={Operational:'#16a34a','Under Construction':'#d97706','In Development':'#2563eb',Planned:'#7c3aed',Research:'#9ca3af'};
 
 function getSubColor(sub){return subColors[sub]||'#6b7280'}
 function getStatusBorder(st){return statusColors[st]||'#6b7280'}
@@ -237,10 +239,11 @@ function makeIcon(p){
   const fill=getSubColor(p['Subsector Classification']);
   const stroke=getStatusBorder(p['Status']);
   const strokeW = p['Status']==='Operational'?3:1.5;
+  const borderStyle = p['approximate_location']==='Yes' ? 'dashed' : 'solid';
 
   return L.divIcon({
     className:'',
-    html:`<div style="width:${r*2}px;height:${r*2}px;border-radius:50%;background:${fill};opacity:.85;border:${strokeW}px solid ${stroke};box-shadow:0 1px ${r+2}px ${fill}44;transition:transform .15s"></div>`,
+    html:`<div style="width:${r*2}px;height:${r*2}px;border-radius:50%;background:${fill};opacity:.85;border:${strokeW}px ${borderStyle} ${stroke};box-shadow:0 1px ${r+2}px ${fill}44;transition:transform .15s"></div>`,
     iconSize:[r*2,r*2],iconAnchor:[r,r]
   });
 }
@@ -332,7 +335,7 @@ function fmtCap(v){
 }
 
 function statusBadge(s){
-  const cls={'Operational':'s-op','Under Construction':'s-uc','In Development':'s-id','Planned':'s-pl'}[s]||'s-id';
+  const cls={'Operational':'s-op','Under Construction':'s-uc','In Development':'s-id','Planned':'s-pl','Research':'s-rs'}[s]||'s-id';
   return `<span class="badge ${cls}">${s}</span>`;
 }
 
