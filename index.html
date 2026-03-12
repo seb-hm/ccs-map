@@ -278,28 +278,26 @@ function init(){
         return p;
       }).filter(p => p['Approx. Latitude'] && p['Approx. Longitude']);
 
-      // Populate Storage Type filter dynamically
-      const storageTypes = [...new Set(
+      // Populate Storage Type filter with known values + any additional ones from data
+      const knownStorageTypes = ['Basalt','Dedicated Saline Storage','Depleted Gas Reservoir and Saline Storage','Depleted Oil or Gas Reservoir'];
+      const dataStorageTypes = [...new Set(
         allProjects.map(p => (p['Storage Classification']||'').trim()).filter(v => v && v !== 'Unknown' && v !== 'Unavailable')
-      )].sort();
+      )];
+      const allStorageTypes = [...new Set([...knownStorageTypes, ...dataStorageTypes])].sort();
       const fST = document.getElementById('fStorageType');
-      storageTypes.forEach(v => {
+      allStorageTypes.forEach(v => {
         const btn = document.createElement('button');
         btn.className = 'pill';
         btn.dataset.v = v;
         btn.textContent = v;
         fST.appendChild(btn);
       });
-      // Add Unknown/Unavailable at the end if present
-      ['Unknown','Unavailable'].forEach(v => {
-        if(allProjects.some(p => (p['Storage Classification']||'').trim() === v)) {
-          const btn = document.createElement('button');
-          btn.className = 'pill';
-          btn.dataset.v = v;
-          btn.textContent = v;
-          fST.appendChild(btn);
-        }
-      });
+      // Add Unknown at the end
+      const unknownBtn = document.createElement('button');
+      unknownBtn.className = 'pill';
+      unknownBtn.dataset.v = 'Unknown';
+      unknownBtn.textContent = 'Unknown';
+      fST.appendChild(unknownBtn);
 
       render();
     },
@@ -317,7 +315,7 @@ function getFiltered(){
     if(filters.subsector!=='all' && p['Subsector Classification']!==filters.subsector) return false;
     if(filters.contact!=='all' && (p['contact_status']||'')!==filters.contact) return false;
     if(filters.priority!=='all' && (p['internal_priority']||'')!==filters.priority) return false;
-    if(filters.storageType!=='all' && (p['Storage Classification']||'')!==filters.storageType) return false;
+    if(filters.storageType!=='all' && (p['Storage Classification']||'').trim()!==filters.storageType) return false;
     if(searchQ){
       const q=searchQ.toLowerCase();
       return ['Project Name','Entities','Country','Location','Subsector Description','project_id']
