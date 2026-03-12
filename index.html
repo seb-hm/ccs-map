@@ -190,6 +190,13 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
           <button class="pill" data-v="Watch List">Watch</button>
         </div>
       </div>
+
+      <div class="filter-row">
+        <span class="filter-label">Storage</span>
+        <div class="filters" id="fStorageType">
+          <button class="pill active" data-v="all">All</button>
+        </div>
+      </div>
     </div>
 
     <div class="project-list" id="projectList"></div>
@@ -242,7 +249,7 @@ function makeIcon(p){
 // ── State ──
 let allProjects=[];
 let markers={};
-let filters={status:'all',sector:'all',subsector:'all',contact:'all',priority:'all'};
+let filters={status:'all',sector:'all',subsector:'all',contact:'all',priority:'all',storageType:'all'};
 let searchQ='';
 
 // ── Data (loaded from CSV) ──
@@ -270,6 +277,30 @@ function init(){
         if(p['Sector Classification']==='Heat & Power') p['Sector Classification']='Heat and Power';
         return p;
       }).filter(p => p['Approx. Latitude'] && p['Approx. Longitude']);
+
+      // Populate Storage Type filter dynamically
+      const storageTypes = [...new Set(
+        allProjects.map(p => (p['Storage Classification']||'').trim()).filter(v => v && v !== 'Unknown' && v !== 'Unavailable')
+      )].sort();
+      const fST = document.getElementById('fStorageType');
+      storageTypes.forEach(v => {
+        const btn = document.createElement('button');
+        btn.className = 'pill';
+        btn.dataset.v = v;
+        btn.textContent = v;
+        fST.appendChild(btn);
+      });
+      // Add Unknown/Unavailable at the end if present
+      ['Unknown','Unavailable'].forEach(v => {
+        if(allProjects.some(p => (p['Storage Classification']||'').trim() === v)) {
+          const btn = document.createElement('button');
+          btn.className = 'pill';
+          btn.dataset.v = v;
+          btn.textContent = v;
+          fST.appendChild(btn);
+        }
+      });
+
       render();
     },
     error: function(err) {
@@ -286,6 +317,7 @@ function getFiltered(){
     if(filters.subsector!=='all' && p['Subsector Classification']!==filters.subsector) return false;
     if(filters.contact!=='all' && (p['contact_status']||'')!==filters.contact) return false;
     if(filters.priority!=='all' && (p['internal_priority']||'')!==filters.priority) return false;
+    if(filters.storageType!=='all' && (p['Storage Classification']||'')!==filters.storageType) return false;
     if(searchQ){
       const q=searchQ.toLowerCase();
       return ['Project Name','Entities','Country','Location','Subsector Description','project_id']
@@ -385,8 +417,8 @@ function highlightCard(id){
 }
 
 // ── Filter handlers ──
-['fStatus','fSector','fSubsector','fContact','fPriority'].forEach(gid=>{
-  const keyMap={fStatus:'status',fSector:'sector',fSubsector:'subsector',fContact:'contact',fPriority:'priority'};
+['fStatus','fSector','fSubsector','fContact','fPriority','fStorageType'].forEach(gid=>{
+  const keyMap={fStatus:'status',fSector:'sector',fSubsector:'subsector',fContact:'contact',fPriority:'priority',fStorageType:'storageType'};
   document.getElementById(gid).addEventListener('click',e=>{
     if(!e.target.classList.contains('pill')&&!e.target.closest('.pill')) return;
     const btn=e.target.classList.contains('pill')?e.target:e.target.closest('.pill');
