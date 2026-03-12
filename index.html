@@ -405,8 +405,8 @@ function render(){
 function focus(id){
   const p=allProjects.find(x=>x.project_id===id);
   if(!p) return;
+  map.once('moveend',()=>{if(markers[id]) markers[id].openPopup()});
   map.flyTo([p['Approx. Latitude'],p['Approx. Longitude']],8,{duration:.7});
-  if(markers[id]) markers[id].openPopup();
   highlightCard(id);
 }
 
