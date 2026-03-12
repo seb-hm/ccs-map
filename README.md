@@ -1,46 +1,61 @@
 # CCS Projects Europe — Interactive Map
 
-Interactive Leaflet map tracking 220+ European Carbon Capture and Storage (CCS) projects. Data sourced from CATF's Europe database, enriched with Factor2 Energy business development intelligence.
+Interactive map tracking 220+ European Carbon Capture and Storage (CCS) projects, maintained by Factor2 Energy.
 
 **Live map:** `https://seb-hm.github.io/ccs-map/`
-
-## How it works
-
-The map (`index.html`) currently embeds all project data inline. The CSV and merge script are included for the quarterly CATF refresh workflow.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Interactive Leaflet map (self-contained, deploy via GitHub Pages) |
-| `projects.csv` | CSV export of the master Excel for reference and future dynamic loading |
-| `catf_merge.py` | Python script to merge fresh CATF data into the F2E Excel |
-| `README.md` | This file |
+| `index.html` | Interactive Leaflet map, deployed via GitHub Pages |
+| `CCS Projects Europe.xlsx` | Master database — single source of truth |
+| `projects.csv` | Auto-generated from Excel by GitHub Action — do not edit manually |
+| `convert_excel_to_csv.py` | Conversion script called by the GitHub Action |
+| `catf_merge.py` | Script to merge fresh CATF data into the master Excel |
+| `.github/workflows/excel_to_csv.yml` | GitHub Action: converts Excel → CSV on every push |
 
-## Map update workflow
+## Workflow — updating the map
 
-The master database lives on SharePoint as `CCS Projects Europe.xlsx`. To update the map after editing the Excel:
+The master database lives on SharePoint as `CCS Projects Europe.xlsx`. To update the map:
 
-1. Export the **Projects** sheet as CSV UTF-8 (File → Save As → CSV UTF-8)
-2. Rename to `projects.csv`
-3. Upload to this repo via GitHub web UI (Add file → Upload files)
-4. The map currently uses inline data — to reflect CSV changes, regenerate `index.html`
+1. Edit the Excel on SharePoint (you or a team member)
+2. Download a copy and replace the file in this repo folder
+3. Push to GitHub:
+   ```
+   cd "C:\Users\sebas\OneDrive\Dokumente\GitHub\ccs-map"
+   git add "CCS Projects Europe.xlsx"
+   git commit -m "Update project data"
+   git push
+   ```
+4. The GitHub Action automatically converts the Excel to `projects.csv` and commits it (~1 min)
+5. GitHub Pages picks up the change and the map updates
 
-## CATF quarterly refresh
+**Never edit `projects.csv` manually** — it is always overwritten by the Action.
 
-1. Download fresh CATF spreadsheet from [catf.us/ccstableeurope](https://www.catf.us/ccstableeurope/)
-2. Download current Excel from SharePoint
-3. Run: `python catf_merge.py CATF_CCUS_Database.xlsx "CCS Projects Europe.xlsx"`
-4. Review merge log, re-upload merged Excel to SharePoint
-5. Export CSV and update this repo
+## Workflow — adding a new project
+
+Use the built-in Claude Code slash command from the repo folder:
+
+1. Open PowerShell and navigate to the repo:
+   ```
+   cd "C:\Users\sebas\OneDrive\Dokumente\GitHub\ccs-map"
+   claude
+   ```
+2. Type `/add-project` and paste any raw project information (website text, press release, PDF content, etc.)
+3. Claude reads the current Excel, checks if the project already exists, and outputs:
+   - A summary table of all filled fields for verification
+   - A tab-separated row to paste directly into Excel (click cell A of an empty row → paste)
+4. Paste the row into your formatted Excel on SharePoint, then push to GitHub
 
 ## Map features
 
-- Color by subsector: Cement, Hydrogen, Storage, Transport Hub, Biomass, DAC, WtE
-- Border by status: Operational, Under Construction, In Development, Planned
-- Filters: Status, Sector, Subsector, Contact Status, Internal Priority
-- Search: Real-time across project name, entities, country, subsector
-- Popups: Full project details including contacts, funding, and links
+- Markers sized by capture capacity, colored by subsector
+- Border color by status: Operational, Under Construction, In Development, Planned, Research
+- Dashed marker border for projects without a confirmed site location (`approximate_location = Yes`)
+- Filters: Status, Sector, Subsector, Contact Status, Internal Priority, Storage Type (multi-select)
+- Search across project name, entities, country, subsector
+- Popups with full project details including contacts, funding, and links
 
 ## GitHub Pages setup
 
@@ -48,4 +63,4 @@ Settings → Pages → Source: deploy from `main` branch, `/ (root)` → Save
 
 ## Requirements
 
-- `catf_merge.py` requires Python 3.8+ with `pandas` and `openpyxl`
+- `convert_excel_to_csv.py` and `catf_merge.py` require Python 3.8+ with `pandas` and `openpyxl`
