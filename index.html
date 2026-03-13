@@ -388,7 +388,7 @@ function render(){
   const list=document.getElementById('projectList');
   if(!vis.length){list.innerHTML='<div class="no-results">No projects match filters</div>';return}
   list.innerHTML=vis.map(p=>`
-    <div class="card" data-id="${p.project_id}" onclick="focus('${p.project_id}')">
+    <div class="card" data-id="${p.project_id}" onclick="selectProject('${p.project_id}')">
       <div class="card-top">
         <h3>${p['Project Name']}</h3>
         ${statusBadge(p.Status)}
@@ -402,11 +402,11 @@ function render(){
   `).join('');
 }
 
-function focus(id){
+function selectProject(id){
   const p=allProjects.find(x=>x.project_id===id);
   if(!p) return;
-  map.once('moveend',()=>{if(markers[id]) markers[id].openPopup()});
   map.flyTo([p['Approx. Latitude'],p['Approx. Longitude']],8,{duration:.7});
+  setTimeout(()=>{if(markers[id]) markers[id].openPopup()},750);
   highlightCard(id);
 }
 
