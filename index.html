@@ -266,8 +266,10 @@ function init(){
         // Handle European decimal commas in coordinates
         let lat = (p['Approx. Latitude']||'').toString().replace(',','.');
         let lng = (p['Approx. Longitude']||'').toString().replace(',','.');
-        p['Approx. Latitude'] = parseFloat(lat) || 0;
-        p['Approx. Longitude'] = parseFloat(lng) || 0;
+        p['Approx. Latitude'] = parseFloat(lat) || null;
+        p['Approx. Longitude'] = parseFloat(lng) || null;
+        p['_noCoords'] = !p['Approx. Latitude'] || !p['Approx. Longitude'];
+        if(p['_noCoords']){ p['Approx. Latitude'] = 54; p['Approx. Longitude'] = 10; }
         // Handle capacity
         let cap = (p['Visualized Capacity (Metric Tons Per Annum)']||'0').toString().replace(',','.');
         p['Visualized Capacity (Metric Tons Per Annum)'] = parseFloat(cap) || 0;
@@ -278,7 +280,7 @@ function init(){
         // Normalize sector
         if(p['Sector Classification']==='Heat & Power') p['Sector Classification']='Heat and Power';
         return p;
-      }).filter(p => p['Approx. Latitude'] && p['Approx. Longitude']);
+      });
 
       // Populate Storage Type filter with known values + any additional ones from data
       const knownStorageTypes = ['Basalt','Dedicated Saline Storage','Depleted Gas Reservoir and Saline Storage','Depleted Oil or Gas Reservoir'];
@@ -363,6 +365,7 @@ function render(){
       <div class="pop">
         <h3>${p['Project Name']}</h3>
         <div class="loc">${p.Location||''}, ${p.Country} · ${p.project_id}</div>
+        ${p['_noCoords']?'<div style="font-size:11px;color:#f59e0b;margin-bottom:4px">⚠ No coordinates — shown at default European location</div>':''}
         <table>
           <tr><td>Entities</td><td>${p.Entities||'—'}</td></tr>
           <tr><td>Sector</td><td>${p['Subsector Description']||p['Sector Description']||'—'}</td></tr>
@@ -405,7 +408,7 @@ function render(){
 function selectProject(id){
   const p=allProjects.find(x=>x.project_id===id);
   if(!p) return;
-  map.flyTo([p['Approx. Latitude'],p['Approx. Longitude']],8,{duration:.7});
+  map.flyTo([p['Approx. Latitude'],p['Approx. Longitude']],p['_noCoords']?4:8,{duration:.7});
   setTimeout(()=>{if(markers[id]) markers[id].openPopup()},750);
   highlightCard(id);
 }
