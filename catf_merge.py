@@ -145,6 +145,17 @@ def merge(catf_path, f2e_path, output_path):
         for row_idx, url in links.items():
             catf.at[row_idx, col] = url
     catf['Status'] = catf['Status'].replace('In development', 'In Development')
+    # Fix common CATF typos and case inconsistencies
+    storage_fixes = {
+        'Uknown': 'Unknown',
+        'Depleted gas reservoir': 'Depleted Gas Reservoir',
+        'Depleted onshore reservoir': 'Depleted Onshore Reservoir',
+        'Depleted Oil or Gas reservoir': 'Depleted Oil or Gas Reservoir',
+    }
+    for col in ['Storage Classification', 'Storage Description']:
+        if col in catf.columns:
+            for old, new in storage_fixes.items():
+                catf[col] = catf[col].str.replace(old, new, regex=False)
     if 'Capacity (Metric Tons Per Annum)' in catf.columns:
         vis_col = 'Visualized Capacity (Metric Tons Per Annum)'
         vis = catf[vis_col] if vis_col in catf.columns else pd.Series([None] * len(catf))
