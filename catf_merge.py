@@ -23,7 +23,7 @@ CATF_COLUMNS = [
     'Project Name', 'Entities', 'Capture or Storage Details', 'Country', 'Location', 'State',
     'Sector Classification', 'Sector Description', 'Subsector Classification', 'Subsector Description',
     'Approx. Latitude', 'Approx. Longitude',
-    'Visualized Capacity (Metric Tons Per Annum)', 'Capacity (Metric Tons Per Annum)',
+    'Capacity (Metric Tons Per Annum)',
     'Storage Classification', 'Storage Description',
     'Year Announced', 'Year Operational', 'Status', 'Notes', 'Month Announced', 'Reference'
 ]
@@ -47,6 +47,21 @@ COUNTRY_CODES = {
 }
 
 
+def normalize_capacity(val):
+    """Normalize a capacity value: extract lower bound from ranges, replace blank/zero with 'Unknown'."""
+    if pd.isna(val) or str(val).strip() in ('', '0', 'Unknown'):
+        return 'Unknown'
+    s = str(val).replace(',', '').replace(' ', '')
+    # Range like "500000-1000000" → take lower bound
+    if '-' in s:
+        s = s.split('-')[0]
+    try:
+        n = float(s)
+        return 'Unknown' if n == 0 else val  # keep original formatting if single value
+    except ValueError:
+        return 'Unknown'
+
+
 def make_key(row):
     return f"{str(row.get('Project Name', '')).strip().lower()}|{str(row.get('Country', '')).strip().lower()}"
 
@@ -56,6 +71,8 @@ def merge(catf_path, f2e_path, output_path):
     catf = pd.read_excel(catf_path, sheet_name='Europe')
     catf = catf.loc[:, ~catf.columns.str.startswith('Unnamed')]
     catf['Status'] = catf['Status'].replace('In development', 'In Development')
+    if 'Capacity (Metric Tons Per Annum)' in catf.columns:
+        catf['Capacity (Metric Tons Per Annum)'] = catf['Capacity (Metric Tons Per Annum)'].apply(normalize_capacity)
     catf['_key'] = catf.apply(make_key, axis=1)
     print(f"  → {len(catf)} projects in fresh CATF file")
 

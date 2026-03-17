@@ -270,12 +270,15 @@ function init(){
         p['Approx. Longitude'] = parseFloat(lng) || null;
         p['_noCoords'] = !p['Approx. Latitude'] || !p['Approx. Longitude'];
         if(p['_noCoords']){ p['Approx. Latitude'] = 54; p['Approx. Longitude'] = 10; }
-        // Handle capacity
-        let cap = (p['Visualized Capacity (Metric Tons Per Annum)']||'0').toString().replace(',','.');
-        p['Visualized Capacity (Metric Tons Per Annum)'] = parseFloat(cap) || 0;
-        if(typeof p['Capacity (Metric Tons Per Annum)']==='string'){
-          if(p['Capacity (Metric Tons Per Annum)']==='Unknown') p['Capacity (Metric Tons Per Annum)']=0;
-          else p['Capacity (Metric Tons Per Annum)']=parseFloat(p['Capacity (Metric Tons Per Annum)'].replace(',','.'))||0;
+        // Handle capacity: extract lower bound from ranges (e.g. "500000-1000000"), treat Unknown/blank as 0
+        {
+          let raw = (p['Capacity (Metric Tons Per Annum)']||'').toString().trim();
+          if(raw === 'Unknown' || raw === '') { p['Capacity (Metric Tons Per Annum)'] = 0; }
+          else {
+            let s = raw.replace(/,/g,'');
+            if(s.includes('-')) s = s.split('-')[0];
+            p['Capacity (Metric Tons Per Annum)'] = parseFloat(s) || 0;
+          }
         }
         // Normalize sector
         if(p['Sector Classification']==='Heat & Power') p['Sector Classification']='Heat and Power';
