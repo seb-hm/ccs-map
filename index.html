@@ -41,9 +41,12 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .sidebar-section h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px}
 
 /* Search */
-.search input{width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border .2s}
+.search{position:relative}
+.search input{width:100%;padding:8px 32px 8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border .2s;box-sizing:border-box}
 .search input:focus{border-color:var(--accent)}
 .search input::placeholder{color:var(--text-muted)}
+.search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;display:none}
+.search-clear:hover{color:var(--text)}
 
 /* Filter pills */
 .filters{display:flex;flex-wrap:wrap;gap:5px}
@@ -128,6 +131,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 
     <div class="sidebar-section search">
       <input type="text" id="searchInput" placeholder="Search project, operator, country…" />
+      <button class="search-clear" id="searchClear" title="Clear search">×</button>
     </div>
 
     <div class="sidebar-section" id="filterSection">
@@ -450,7 +454,19 @@ function highlightCard(id){
   });
 });
 
-document.getElementById('searchInput').addEventListener('input',e=>{searchQ=e.target.value;render()});
+document.getElementById('searchInput').addEventListener('input',e=>{
+  searchQ=e.target.value;
+  document.getElementById('searchClear').style.display=searchQ?'block':'none';
+  render();
+});
+document.getElementById('searchClear').addEventListener('click',()=>{
+  const inp=document.getElementById('searchInput');
+  inp.value='';searchQ='';
+  document.getElementById('searchClear').style.display='none';
+  document.querySelectorAll('.card.active').forEach(c=>c.classList.remove('active'));
+  map.closePopup();
+  render();
+});
 
 init();
 </script>
