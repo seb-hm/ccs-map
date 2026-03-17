@@ -16,6 +16,7 @@ The script matches projects on (Project Name + Country) as the join key.
 
 import argparse
 import pandas as pd
+import openpyxl
 from datetime import datetime
 import sys
 
@@ -81,10 +82,30 @@ def make_key(row):
     return f"{str(row.get('Project Name', '')).strip().lower()}|{str(row.get('Country', '')).strip().lower()}"
 
 
+def extract_hyperlinks(xlsx_path, sheet_name, columns):
+    """Return a dict of {col_name: {row_index: url}} for cells with hyperlinks."""
+    wb = openpyxl.load_workbook(xlsx_path)
+    ws = wb[sheet_name]
+    header = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+    col_indices = {col: idx for idx, col in enumerate(header) if col in columns}
+    result = {col: {} for col in col_indices}
+    for row in ws.iter_rows(min_row=2):
+        pandas_idx = row[0].row - 2  # 0-based pandas index
+        for col, col_idx in col_indices.items():
+            cell = row[col_idx]
+            if cell.hyperlink and cell.hyperlink.target:
+                result[col][pandas_idx] = cell.hyperlink.target
+    return result
+
+
 def merge(catf_path, f2e_path, output_path):
     print(f"Loading fresh CATF data from: {catf_path}")
     catf = pd.read_excel(catf_path, sheet_name='Europe')
     catf = catf.loc[:, ~catf.columns.str.startswith('Unnamed')]
+    hyperlinks = extract_hyperlinks(catf_path, 'Europe', ['Reference'])
+    for col, links in hyperlinks.items():
+        for row_idx, url in links.items():
+            catf.at[row_idx, col] = url
     catf['Status'] = catf['Status'].replace('In development', 'In Development')
     if 'Capacity (Metric Tons Per Annum)' in catf.columns:
         vis_col = 'Visualized Capacity (Metric Tons Per Annum)'
