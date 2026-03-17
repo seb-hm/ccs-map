@@ -47,19 +47,34 @@ COUNTRY_CODES = {
 }
 
 
-def normalize_capacity(val):
-    """Normalize a capacity value: extract lower bound from ranges, replace blank/zero with 'Unknown'."""
-    if pd.isna(val) or str(val).strip() in ('', '0', 'Unknown'):
-        return 'Unknown'
-    s = str(val).replace(',', '').replace(' ', '')
-    # Range like "500000-1000000" → take lower bound
-    if '-' in s:
-        s = s.split('-')[0]
+def _parse_single_number(val):
+    """Try to parse val as a single positive number. Returns the float, or None if not possible."""
+    if pd.isna(val):
+        return None
+    s = str(val).strip().replace(',', '').replace(' ', '')
+    if not s or s.lower() in ('unknown', 'unavailable', 'n/a', '-'):
+        return None
+    # Reject ranges (contain a dash that isn't a negative sign at the start)
+    if '-' in s.lstrip('-'):
+        return None
     try:
         n = float(s)
-        return 'Unknown' if n == 0 else val  # keep original formatting if single value
+        return n if n > 0 else None
     except ValueError:
-        return 'Unknown'
+        return None
+
+
+def normalize_capacity(cap_val, vis_cap_val=None):
+    """Resolve best capacity value: prefer Capacity if it's a single number,
+    fall back to Visualized Capacity, otherwise return 'Unknown'."""
+    n = _parse_single_number(cap_val)
+    if n is not None:
+        return cap_val  # keep original formatting
+    if vis_cap_val is not None:
+        n = _parse_single_number(vis_cap_val)
+        if n is not None:
+            return vis_cap_val
+    return 'Unknown'
 
 
 def make_key(row):
@@ -72,7 +87,11 @@ def merge(catf_path, f2e_path, output_path):
     catf = catf.loc[:, ~catf.columns.str.startswith('Unnamed')]
     catf['Status'] = catf['Status'].replace('In development', 'In Development')
     if 'Capacity (Metric Tons Per Annum)' in catf.columns:
-        catf['Capacity (Metric Tons Per Annum)'] = catf['Capacity (Metric Tons Per Annum)'].apply(normalize_capacity)
+        vis_col = 'Visualized Capacity (Metric Tons Per Annum)'
+        vis = catf[vis_col] if vis_col in catf.columns else pd.Series([None] * len(catf))
+        catf['Capacity (Metric Tons Per Annum)'] = [
+            normalize_capacity(c, v) for c, v in zip(catf['Capacity (Metric Tons Per Annum)'], vis)
+        ]
     catf['_key'] = catf.apply(make_key, axis=1)
     print(f"  → {len(catf)} projects in fresh CATF file")
 
