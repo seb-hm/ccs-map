@@ -48,6 +48,31 @@ Use the built-in Claude Code slash command from the repo folder:
    - A tab-separated row to paste directly into Excel (click cell A of an empty row → paste)
 4. Paste the row into your formatted Excel on SharePoint, then push to GitHub
 
+## Workflow — merging a fresh CATF database download
+
+When CATF publishes an updated CCS database, merge it into the master Excel:
+
+1. Download the latest CATF database from https://www.catf.us/ccstableeurope/ (e.g. `CATF_CCUS_Database.xlsx`)
+2. Place a copy of your current working Excel (`CCS Projects Europe.xlsx`) alongside it, or use the repo copy
+3. Run the merge script:
+   ```
+   cd "C:\Users\sebas\OneDrive\Dokumente\GitHub\ccs-map"
+   python catf_merge.py "C:\Users\sebas\Downloads\CATF_CCUS_Database.xlsx" "C:\Users\sebas\Downloads\CCS Projects Europe.xlsx"
+   ```
+4. The script will:
+   - Match projects by name + country (exact match, then fuzzy matching above 80% similarity)
+   - Refresh all CATF-sourced columns for matched projects
+   - Preserve all F2E enrichment columns (contacts, funding, notes, etc.)
+   - Preserve Excel formatting (fonts, colors, column widths)
+   - Append any new CATF projects with auto-generated project IDs
+   - Flag projects no longer in CATF (but never remove them)
+   - Skip manually added projects (source = `Manual`)
+5. Review the console output and open the updated Excel to spot-check
+6. To write to a separate file instead of overwriting, use `--output`:
+   ```
+   python catf_merge.py "CATF_download.xlsx" "CCS Projects Europe.xlsx" --output merged_test.xlsx
+   ```
+
 ## Map features
 
 - Markers sized by capture capacity, colored by subsector

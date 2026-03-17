@@ -36,9 +36,25 @@ Use the pasted text to fill in as many columns as possible. Key mapping rules:
 - **Visualized Capacity**: same as Capacity unless unknown, then `0`
 - **Approx. Latitude / Longitude**: decimal degrees. If location is approximate (research project, region-level only), set `approximate_location` = `Yes`
 - **approximate_location**: `Yes` if no specific site location is known, otherwise leave empty
+- **source**: always set to `Manual` for projects added via this command
 - Leave any unknown fields empty
 
-## Step 4 — Output
+## Step 4 — Copy to clipboard and output summary
+
+### Copy row to clipboard
+Build the full row as a tab-separated string in the exact column order from the Excel headers (empty fields = empty string between tabs). Then run this node script to write it to a temp file and copy it to the Windows clipboard:
+
+```js
+const fs = require('fs');
+const { execSync } = require('child_process');
+const row = /* tab-separated string */;
+fs.writeFileSync('C:/Users/sebas/AppData/Local/Temp/ccs_row.txt', row, 'utf8');
+execSync(`powershell -Command "Get-Content 'C:\\Users\\sebas\\AppData\\Local\\Temp\\ccs_row.txt' -Raw | Set-Clipboard"`);
+console.log('Copied to clipboard');
+```
+
+Confirm the clipboard copy succeeded, then tell the user:
+> Row copied to clipboard. Click cell A in the target row and press Ctrl+V.
 
 ### Summary (for verification)
 Show only the non-empty fields as a compact two-column table:
@@ -46,14 +62,6 @@ Show only the non-empty fields as a compact two-column table:
 | Column | Value |
 |--------|-------|
 | ...    | ...   |
-
-### Paste row (for Excel)
-Output the full row as a **tab-separated single line** in the exact column order from the Excel headers. Empty fields = empty string between tabs. Label it clearly:
-
-```
-[PASTE INTO EXCEL — select an empty row, click the first cell (column A), paste]
-<tab-separated values here>
-```
 
 If this is an **existing project**, only show the changed columns in the summary and note which row number to update.
 
