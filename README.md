@@ -40,11 +40,11 @@ The master database lives on SharePoint as `CCS Projects Europe.xlsx`. To update
 4. Save, download, and replace the file in this repo folder
 5. Push to GitHub - the Action will regenerate `projects.csv` automatically
 
-## Workflow - merging a fresh CATF database download
+## Workflow - merging an updated CATF database download
 
 When CATF publishes an updated CCS database, merge it into the master Excel:
 
-1. Download the latest CATF database from https://www.catf.us/ccstableeurope/ (e.g. `CATF_CCUS_Database.xlsx`)
+1. Download the latest CATF database from https://www.catf.us/ccstableeurope/ (e.g. `CATF_CCUS_Database.xlsx`) (Tab "Europe")
 2. Place a copy of the current working Excel (`CCS Projects Europe.xlsx`) alongside it, or use the repo copy
 3. Run the merge script from the repo folder:
    ```
@@ -59,10 +59,7 @@ When CATF publishes an updated CCS database, merge it into the master Excel:
    - Flag projects no longer in CATF (but never remove them)
    - Skip manually added projects (source = `Manual`)
 5. Review the console output and open the updated Excel to spot-check
-6. To write to a separate file instead of overwriting, use `--output`:
-   ```
-   python catf_merge.py "CATF_download.xlsx" "CCS Projects Europe.xlsx" --output merged_test.xlsx
-   ```
+
 
 ## Map features
 
@@ -73,9 +70,6 @@ When CATF publishes an updated CCS database, merge it into the master Excel:
 - Search across project name, entities, country, subsector
 - Popups with full project details including contacts, funding, and links
 
-## GitHub Pages setup
-
-Settings -> Pages -> Source: deploy from `main` branch, `/ (root)` -> Save
 
 ## Requirements
 
