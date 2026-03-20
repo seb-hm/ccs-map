@@ -35,18 +35,11 @@ The master database lives on SharePoint as `CCS Projects Europe.xlsx`. To update
 
 ## Workflow — adding a new project
 
-Use the built-in Claude Code slash command from the repo folder:
-
-1. Open PowerShell and navigate to the repo:
-   ```
-   cd "C:\Users\sebas\OneDrive\Dokumente\GitHub\ccs-map"
-   claude
-   ```
-2. Type `/add-project` and paste any raw project information (website text, press release, PDF content, etc.)
-3. Claude reads the current Excel, checks if the project already exists, and outputs:
-   - A summary table of all filled fields for verification
-   - A tab-separated row to paste directly into Excel (click cell A of an empty row → paste)
-4. Paste the row into your formatted Excel on SharePoint, then push to GitHub
+1. Open the master Excel on SharePoint
+2. Add a new row with the project data (name, country, coordinates, capacity, status, etc.)
+3. Assign a project ID following the existing pattern (e.g. `CCS-224`)
+4. Save, download, and replace the file in this repo folder
+5. Push to GitHub — the Action will regenerate `projects.csv` automatically
 
 ## Workflow — merging a fresh CATF database download
 
