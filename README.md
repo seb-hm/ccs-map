@@ -19,11 +19,10 @@ Interactive map tracking 220+ European Carbon Capture and Storage (CCS) projects
 
 The master database lives on SharePoint as `CCS Projects Europe.xlsx`. To update the map:
 
-1. Edit the Excel on SharePoint (you or a team member)
-2. Download a copy and replace the file in this repo folder
+1. Edit the Excel on SharePoint
+2. Download a copy and replace the file in the local repo folder
 3. Push to GitHub:
    ```
-   cd "C:\Users\sebas\OneDrive\Dokumente\GitHub\ccs-map"
    git add "CCS Projects Europe.xlsx"
    git commit -m "Update project data"
    git push
@@ -46,11 +45,10 @@ The master database lives on SharePoint as `CCS Projects Europe.xlsx`. To update
 When CATF publishes an updated CCS database, merge it into the master Excel:
 
 1. Download the latest CATF database from https://www.catf.us/ccstableeurope/ (e.g. `CATF_CCUS_Database.xlsx`)
-2. Place a copy of your current working Excel (`CCS Projects Europe.xlsx`) alongside it, or use the repo copy
-3. Run the merge script:
+2. Place a copy of the current working Excel (`CCS Projects Europe.xlsx`) alongside it, or use the repo copy
+3. Run the merge script from the repo folder:
    ```
-   cd "C:\Users\sebas\OneDrive\Dokumente\GitHub\ccs-map"
-   python catf_merge.py "C:\Users\sebas\Downloads\CATF_CCUS_Database.xlsx" "C:\Users\sebas\Downloads\CCS Projects Europe.xlsx"
+   python catf_merge.py path/to/CATF_CCUS_Database.xlsx "CCS Projects Europe.xlsx"
    ```
 4. The script will:
    - Match projects by name + country (exact match, then fuzzy matching above 80% similarity)
