@@ -1,4 +1,4 @@
-# CCS Projects Europe — Interactive Map
+# CCS Projects Europe - Interactive Map
 
 Interactive map tracking 220+ European Carbon Capture and Storage (CCS) projects, maintained by Factor2 Energy.
 
@@ -9,13 +9,13 @@ Interactive map tracking 220+ European Carbon Capture and Storage (CCS) projects
 | File | Purpose |
 |------|---------|
 | `index.html` | Interactive Leaflet map, deployed via GitHub Pages |
-| `CCS Projects Europe.xlsx` | Master database — single source of truth |
-| `projects.csv` | Auto-generated from Excel by GitHub Action — do not edit manually |
+| `CCS Projects Europe.xlsx` | Master database - single source of truth |
+| `projects.csv` | Auto-generated from Excel by GitHub Action - do not edit manually |
 | `convert_excel_to_csv.py` | Conversion script called by the GitHub Action |
 | `catf_merge.py` | Script to merge fresh CATF data into the master Excel |
-| `.github/workflows/excel_to_csv.yml` | GitHub Action: converts Excel → CSV on every push |
+| `.github/workflows/excel_to_csv.yml` | GitHub Action: converts Excel -> CSV on every push |
 
-## Workflow — updating the map
+## Workflow - updating the map
 
 The master database lives on SharePoint as `CCS Projects Europe.xlsx`. To update the map:
 
@@ -31,17 +31,17 @@ The master database lives on SharePoint as `CCS Projects Europe.xlsx`. To update
 4. The GitHub Action automatically converts the Excel to `projects.csv` and commits it (~1 min)
 5. GitHub Pages picks up the change and the map updates
 
-**Never edit `projects.csv` manually** — it is always overwritten by the Action.
+**Never edit `projects.csv` manually** - it is always overwritten by the Action.
 
-## Workflow — adding a new project
+## Workflow - adding a new project
 
 1. Open the master Excel on SharePoint
 2. Add a new row with the project data (name, country, coordinates, capacity, status, etc.)
 3. Assign a project ID following the existing pattern (e.g. `CCS-224`)
 4. Save, download, and replace the file in this repo folder
-5. Push to GitHub — the Action will regenerate `projects.csv` automatically
+5. Push to GitHub - the Action will regenerate `projects.csv` automatically
 
-## Workflow — merging a fresh CATF database download
+## Workflow - merging a fresh CATF database download
 
 When CATF publishes an updated CCS database, merge it into the master Excel:
 
@@ -77,7 +77,7 @@ When CATF publishes an updated CCS database, merge it into the master Excel:
 
 ## GitHub Pages setup
 
-Settings → Pages → Source: deploy from `main` branch, `/ (root)` → Save
+Settings -> Pages -> Source: deploy from `main` branch, `/ (root)` -> Save
 
 ## Requirements
 
