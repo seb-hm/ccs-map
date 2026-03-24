@@ -56,7 +56,7 @@ def classify_onshore_offshore(df):
 sys.stdout.reconfigure(line_buffering=True)
 
 CATF_COLUMNS = [
-    'Project Name', 'Entities', 'Capture or Storage Details', 'Country', 'Location', 'State',
+    'Project Name', 'Entities', 'Capture or Storage Details', 'Country', 'Location',
     'Sector Classification', 'Sector Description', 'Subsector Classification', 'Subsector Description',
     'Approx. Latitude', 'Approx. Longitude',
     'Capacity (Metric Tons Per Annum)',
