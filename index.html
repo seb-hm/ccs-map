@@ -383,7 +383,7 @@ function render(){
       <div class="pop">
         <h3>${p['Project Name']}</h3>
         <div class="loc">${p.Location||''}, ${p.Country} · ${p.project_id}</div>
-        ${p['_noCoords']?'<div style="font-size:11px;color:#f59e0b;margin-bottom:4px">⚠ No coordinates — shown at default European location</div>':''}
+        ${p['_noCoords']?'<div style="font-size:11px;color:#f59e0b;margin-bottom:4px">⚠ No coordinates - shown at default European location</div>':''}
         <table>
           <tr><td>Entities</td><td>${p.Entities||'—'}</td></tr>
           <tr><td>Sector</td><td>${p['Subsector Description']||p['Sector Description']||'—'}</td></tr>
