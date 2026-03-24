@@ -21,6 +21,37 @@ from datetime import datetime
 from difflib import SequenceMatcher
 import sys
 
+
+def classify_onshore_offshore(df):
+    """Add/update 'Onshore/Offshore' column based on coordinates using Natural Earth land polygons."""
+    try:
+        import geopandas as gpd
+        from shapely.geometry import Point
+
+        try:
+            import geodatasets
+            land = gpd.read_file(geodatasets.get_path('naturalearth.land'))
+        except Exception:
+            land = gpd.read_file(gpd.datasets.get_path('naturalearth_land'))
+
+        land_union = land.geometry.unary_union
+
+        def _classify(row):
+            lat = row.get('Approx. Latitude')
+            lon = row.get('Approx. Longitude')
+            if pd.isna(lat) or pd.isna(lon):
+                return 'Unknown'
+            try:
+                return 'Onshore' if land_union.contains(Point(float(lon), float(lat))) else 'Offshore'
+            except Exception:
+                return 'Unknown'
+
+        return df.apply(_classify, axis=1)
+    except ImportError:
+        print("  WARNING: geopandas not available — 'Onshore/Offshore' column will be set to 'Unknown' for new projects.")
+        print("           Install with: pip install geopandas geodatasets")
+        return pd.Series(['Unknown'] * len(df), index=df.index)
+
 # Ensure print output is flushed immediately
 sys.stdout.reconfigure(line_buffering=True)
 
@@ -250,10 +281,15 @@ def merge(catf_path, f2e_path, output_path):
                     new_row[col] = row.get(col, '')
                 for col in F2E_COLUMNS:
                     new_row[col] = ''
+                new_row['Onshore/Offshore'] = ''
                 new_row['source'] = 'CATF'
                 new_rows.append(new_row)
 
         new_df = pd.DataFrame(new_rows)
+        print("  Classifying new projects as Onshore/Offshore...")
+        new_df['Onshore/Offshore'] = classify_onshore_offshore(new_df)
+        loc_counts = new_df['Onshore/Offshore'].value_counts().to_dict()
+        print(f"    -> {loc_counts}")
         f2e = pd.concat([f2e, new_df], ignore_index=True)
         print(f"\n  Added {len(new_rows)} new projects")
 

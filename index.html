@@ -203,6 +203,16 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
           <button class="pill active" data-v="all">All</button>
         </div>
       </div>
+
+      <div class="filter-row">
+        <span class="filter-label">Location</span>
+        <div class="filters" id="fLocation">
+          <button class="pill active" data-v="all">All</button>
+          <button class="pill" data-v="Onshore">Onshore</button>
+          <button class="pill" data-v="Offshore">Offshore</button>
+          <button class="pill" data-v="Unknown">Unknown</button>
+        </div>
+      </div>
     </div>
 
     <div class="project-list" id="projectList"></div>
@@ -255,7 +265,7 @@ function makeIcon(p){
 // ── State ──
 let allProjects=[];
 let markers={};
-let filters={status:new Set(),sector:new Set(),subsector:new Set(),contact:new Set(),priority:new Set(),storageType:new Set()};
+let filters={status:new Set(),sector:new Set(),subsector:new Set(),contact:new Set(),priority:new Set(),storageType:new Set(),location:new Set()};
 let searchQ='';
 
 // ── Data (loaded from CSV) ──
@@ -327,6 +337,7 @@ function getFiltered(){
     if(filters.contact.size>0 && !filters.contact.has(p['contact_status']||'')) return false;
     if(filters.priority.size>0 && !filters.priority.has(p['internal_priority']||'')) return false;
     if(filters.storageType.size>0 && !filters.storageType.has((p['Storage Classification']||'').trim())) return false;
+    if(filters.location.size>0 && !filters.location.has((p['Onshore/Offshore']||'Unknown').trim())) return false;
     if(searchQ){
       const q=searchQ.toLowerCase();
       return ['Project Name','Entities','Country','Location','Subsector Description','project_id']
@@ -427,8 +438,8 @@ function highlightCard(id){
 }
 
 // ── Filter handlers ──
-['fStatus','fSector','fSubsector','fContact','fPriority','fStorageType'].forEach(gid=>{
-  const keyMap={fStatus:'status',fSector:'sector',fSubsector:'subsector',fContact:'contact',fPriority:'priority',fStorageType:'storageType'};
+['fStatus','fSector','fSubsector','fContact','fPriority','fStorageType','fLocation'].forEach(gid=>{
+  const keyMap={fStatus:'status',fSector:'sector',fSubsector:'subsector',fContact:'contact',fPriority:'priority',fStorageType:'storageType',fLocation:'location'};
   document.getElementById(gid).addEventListener('click',e=>{
     if(!e.target.classList.contains('pill')&&!e.target.closest('.pill')) return;
     const btn=e.target.classList.contains('pill')?e.target:e.target.closest('.pill');
