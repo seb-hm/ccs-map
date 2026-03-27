@@ -2,6 +2,8 @@
 
 Interactive map tracking 220+ European Carbon Capture and Storage (CCS) projects, maintained by Factor2 Energy.
 
+CATF publishes their own [CCS map for Europe](https://www.catf.us/ccsmapeurope/), which serves as the primary data source for this map. We recreated it for internal use to add more granularity, additional filter options, and Factor2 Energy-specific data (contacts, funding, internal priority, etc.).
+
 **Live map:** `https://seb-hm.github.io/ccs-map/`
 
 ## Files
@@ -44,7 +46,7 @@ The master database lives on SharePoint as `CCS Projects Europe.xlsx`. To update
 
 When CATF publishes an updated CCS database, merge it into the master Excel:
 
-1. Download the current master Excel from SharePoint (`CCS Projects Europe.xlsx`) and place it in the local repo folder
+1. Download the current master Excel from [SharePoint](https://factortwoenergy.sharepoint.com/:f:/s/BusinessDevelopment/IgDt99LdD2EFQ7ZloAzScmihAUVY-r_6PCOgzhr4sEe1_bw?e=TwZszq) (`CCS Projects Europe.xlsx`) and place it in the local repo folder
 2. Download the latest CATF database from https://www.catf.us/ccstableeurope/ (e.g. `CATF_CCUS_Database.xlsx`) (Tab "Europe")
 3. Run the merge script from the repo folder:
    ```
